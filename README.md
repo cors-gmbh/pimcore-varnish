@@ -1,4 +1,4 @@
-CORS Plugin Skeleton
+CORS Pimcore Varnish
 --------
 
-CORS Plugin Skeleton
+Pimcore Varnish integration.

@@ -1,0 +1,11 @@
+cors_varnish_clear_element_cache:
+    path: /admin/cors/varnish/clear-element
+    defaults: { _controller: CORS\Bundle\VarnishBundle\Controller\AdminController::clearElementCache }
+    options:
+        expose: true
+
+cors_varnish_purge_cache:
+    path: /admin/cors/varnish/purge
+    defaults: { _controller: CORS\Bundle\VarnishBundle\Controller\AdminController::purgeCache }
+    options:
+        expose: true

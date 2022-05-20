@@ -1,0 +1,56 @@
+{
+    "name": "cors/varnish-bundle",
+    "type": "pimcore-bundle",
+    "description": "CORS - Varnish",
+    "keywords": [
+        "coreshop",
+        "pimcore",
+        "ecommerce",
+        "varnish"
+    ],
+    "homepage": "http://www.cors.gmbh",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "CORS GmbH",
+            "email": "office@cors.gmbh",
+            "homepage": "https://www.cors.gmbh/",
+            "role": "TEAM"
+        }
+    ],
+    "require": {
+        "php": ">=8.0",
+        "pimcore/pimcore": "^10.4",
+        "friendsofsymfony/http-cache-bundle": "^2.12",
+        "nyholm/psr7": "^1.5",
+        "guzzlehttp/promises": "^1.5"
+    },
+    "require-dev": {
+        "symplify/easy-coding-standard": "^9.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "CORS\\Bundle\\VarnishBundle\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "classmap": [
+            "Kernel.php"
+        ],
+        "psr-4": {
+            "App\\": "test/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        },
+        "pimcore": {
+            "bundles": [
+                "CORS\\Bundle\\VarnishBundle\\CORSVarnishBundle"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

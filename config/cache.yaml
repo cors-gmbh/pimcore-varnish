@@ -1,0 +1,33 @@
+parameters:
+  varnish_host: '%env(VARNISH_HOST)%'
+
+fos_http_cache:
+  cache_manager:
+    enabled: auto
+  tags:
+    enabled: true
+  proxy_client:
+    varnish:
+      http:
+        servers:
+          - '%varnish_host%'
+  cache_control:
+    defaults:
+      overwrite: true
+    rules:
+      -
+        match:
+          path: ^/$
+        headers:
+          cache_control: { private: false, public: true, max_age: 32000, s_maxage: 32000 }
+          etag: "strong"
+          vary: [Accept-Encoding, Accept-Language]
+
+      # match everything to set defaults
+      -
+        match:
+          path: ^/
+        headers:
+          overwrite: false
+          cache_control: { public: true, max_age: 15, s_maxage: 30 }
+          etag: "strong"

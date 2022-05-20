@@ -1,0 +1,119 @@
+version: '3.4'
+
+networks:
+  cors_dev:
+    external: true
+  cors-varnish:
+    external: false
+
+services:
+  redis:
+    container_name: cors-varnish-redis
+    image: redis:alpine
+    command: redis-server --requirepass password
+    networks:
+      - cors-varnish
+
+  db:
+    image: mysql:8
+    container_name: cors-varnish-db
+    networks:
+      - cors_dev
+      - cors-varnish
+    working_dir: /application
+    volumes:
+      - cors-varnish-database:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=ROOT
+      - MYSQL_DATABASE=pimcore
+      - MYSQL_USER=pimcore
+      - MYSQL_PASSWORD=pimcore
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: cors-varnish-nginx
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.cors_plugin_skeleton.rule=HostRegexp(`cors-varnish.localhost`)
+      - traefik.http.routers.cors_plugin_skeleton.entrypoints=cors_dev
+      - traefik.http.routers.cors_plugin_skeleton.tls=true
+      - traefik.http.services.cors_plugin_skeleton.loadbalancer.server.port=80
+      - traefik.docker.network=cors_dev
+    networks:
+      - cors_dev
+      - cors-varnish
+    volumes:
+      - nfsmount:/var/www/html:ro
+      - ./.docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - php
+      - php-debug
+
+  php:
+    image: git.e-conomix.at:5050/cors/docker/php-alpine-fpm:8.0-LATEST
+    container_name: cors-varnish-php
+    command: 'php-fpm'
+    entrypoint: docker-php-entrypoint
+    networks:
+      - cors-varnish
+      - cors_dev
+    depends_on:
+      - db
+    volumes:
+      - nfsmount:/var/www/html:cached
+    environment:
+      - COMPOSER_AUTH=${COMPOSER_AUTH}
+
+  php-debug:
+    image: git.e-conomix.at:5050/cors/docker/php-alpine-fpm-debug:8.0-LATEST
+    container_name: cors-varnish-php-debug
+    command: 'php-fpm'
+    entrypoint: xdebug-entrypoint
+    depends_on:
+      - db
+    volumes:
+      - nfsmount:/var/www/html:cached
+    networks:
+      - cors-varnish
+      - cors_dev
+    environment:
+      - COMPOSER_AUTH=${COMPOSER_AUTH:-}
+      - PHP_IDE_CONFIG=serverName=cors-varnish.localhost
+
+  supervisord:
+    image: git.e-conomix.at:5050/cors/docker/php-alpine-supervisord:8.0-LATEST
+    depends_on:
+      - db
+    volumes:
+      - nfsmount:/var/www/html:cached
+    networks:
+      - cors-varnish
+
+  varnish:
+    image: varnish:7.1-alpine
+    container_name: cors-varnish-varnish
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.cors_plugin_skeleton_cached.rule=HostRegexp(`cors-varnish-cached.localhost`)
+      - traefik.http.routers.cors_plugin_skeleton_cached.entrypoints=cors_dev
+      - traefik.http.routers.cors_plugin_skeleton_cached.tls=true
+      - traefik.http.services.cors_plugin_skeleton_cached.loadbalancer.server.port=80
+      - traefik.docker.network=cors_dev
+    depends_on:
+      - nginx
+    volumes:
+      - .docker/varnish.vcl:/etc/varnish/default.vcl:ro
+      - .docker/fos/fos_ban.vcl:/etc/varnish/fos/fos_ban.vcl:ro
+      - .docker/fos:/etc/varnish/fos:ro
+    networks:
+      - cors-varnish
+      - cors_dev
+
+volumes:
+  cors-varnish-database:
+  nfsmount:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=host.docker.internal,rw,nolock,hard,nointr,nfsvers=3
+      device: ":${PWD}"

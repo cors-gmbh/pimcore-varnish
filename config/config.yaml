@@ -1,0 +1,4 @@
+imports:
+    - { resource: services.yaml }
+    - { resource: cache.yaml }
+    - { resource: 'local/' }

@@ -1,0 +1,19 @@
+parameters:
+  varnish_host: '%env(VARNISH_HOST)%'
+
+fos_http_cache:
+  cache_manager:
+    enabled: auto
+  tags:
+    enabled: true
+  proxy_client:
+    varnish:
+      http:
+        servers:
+          - '%varnish_host%'
+
+framework:
+  messenger:
+    transports:
+    routing:
+      'CORS\Bundle\VarnishBundle\Messenger\InvalidateMessage': pimcore_core
